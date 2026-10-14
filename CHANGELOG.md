@@ -1,5 +1,17 @@
 # sqmRobocopyGui - Changelog
 
+## [0.1.1.0] - 2026-10-14
+
+### Fehler
+
+- Nach der Auswahl von Quelle oder Ziel erschien ein zweiter, alter Ordnerdialog. Ursache:
+  `IFileOpenDialog::GetResults()` liefert unter aktuellen Windows-11-Builds S_OK mit leerem
+  Ergebnis, der Zugriff darauf warf eine Ausnahme, und die GUI fiel auf den
+  FolderBrowserDialog zurueck. Die Einzelauswahl liest jetzt `GetResult()`, die
+  Mehrfachauswahl (`/XD`) faellt bei leerem Ergebnis ebenfalls darauf zurueck. Nach dem
+  Schliessen des Dialogs wirft die Auswahl keine Ausnahme mehr, der alte Dialog ist nur noch
+  Rueckfall, wenn der Explorer-Dialog gar nicht geoeffnet werden kann.
+
 ## [0.1.0.0] - 2026-10-10
 
 ### Erste Version

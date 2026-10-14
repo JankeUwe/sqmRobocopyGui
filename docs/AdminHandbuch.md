@@ -1,6 +1,6 @@
 # sqmRobocopyGui - Handbuch
 
-Stand: 2026-10-10, sqmRobocopyGui 0.1.0.0, robocopy-Optionen von Windows 11 24H2 / Server 2025.
+Stand: 2026-10-14, sqmRobocopyGui 0.1.1.0, robocopy-Optionen von Windows 11 24H2 / Server 2025.
 
 ## 1. Zweck
 

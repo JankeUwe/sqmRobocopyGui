@@ -114,22 +114,52 @@ namespace Srg
                     catch { }
                 }
                 if (dlg.Show(owner) != 0) return null;
-                IShellItemArray items;
-                dlg.GetResults(out items);
-                uint count;
-                items.GetCount(out count);
+                // Nach Show() darf nichts mehr werfen: die Aufrufer fallen sonst auf den alten
+                // Dialog zurueck und der Benutzer sieht die Ordnerauswahl ein zweites Mal.
+                // GetResults() liefert je nach Windows-Build S_OK mit leerem Zeiger (auch bei
+                // Mehrfachauswahl) - dann gilt GetResult().
                 List<string> paths = new List<string>();
-                for (uint i = 0; i < count; i++)
+                if (multi)
                 {
-                    IShellItem it;
-                    items.GetItemAt(i, out it);
-                    string p;
-                    it.GetDisplayName(SIGDN_FILESYSPATH, out p);
-                    if (!string.IsNullOrEmpty(p)) paths.Add(p);
+                    try
+                    {
+                        IShellItemArray items;
+                        dlg.GetResults(out items);
+                        if (items != null)
+                        {
+                            uint count;
+                            items.GetCount(out count);
+                            for (uint i = 0; i < count; i++)
+                            {
+                                IShellItem it;
+                                items.GetItemAt(i, out it);
+                                AddPath(paths, it);
+                            }
+                        }
+                    }
+                    catch { }
                 }
-                return paths.ToArray();
+                if (paths.Count == 0)
+                {
+                    try
+                    {
+                        IShellItem one;
+                        dlg.GetResult(out one);
+                        AddPath(paths, one);
+                    }
+                    catch { }
+                }
+                return paths.Count > 0 ? paths.ToArray() : null;
             }
             finally { Marshal.ReleaseComObject(dlg); }
+        }
+
+        private static void AddPath(List<string> paths, IShellItem item)
+        {
+            if (item == null) return;
+            string p;
+            item.GetDisplayName(SIGDN_FILESYSPATH, out p);
+            if (!string.IsNullOrEmpty(p)) paths.Add(p);
         }
     }
 
