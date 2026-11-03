@@ -218,7 +218,8 @@ if ($importOk) {
         $shortcut.Arguments        = "-NoProfile -STA -ExecutionPolicy Bypass -WindowStyle Hidden -Command `"Import-Module '$psd1Installed'; Show-sqmRobocopyGui`""
         $shortcut.WorkingDirectory = [Environment]::GetFolderPath('UserProfile')
         $shortcut.Description      = 'sqmRobocopyGui - robocopy-Befehle per GUI zusammenstellen'
-        $shortcut.IconLocation     = "$env:SystemRoot\System32\imageres.dll,109"
+        $iconInstalled             = Join-Path $Destination 'Assets\sqmRobocopyGui.ico'
+        $shortcut.IconLocation     = if (Test-Path $iconInstalled) { "$iconInstalled,0" } else { "$env:SystemRoot\System32\imageres.dll,109" }
         $shortcut.Save()
         Write-Host "Startmenue-Eintrag angelegt: $shortcutPath" -ForegroundColor Green
     } catch {

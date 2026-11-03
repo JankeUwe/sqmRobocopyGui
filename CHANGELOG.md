@@ -1,5 +1,13 @@
 # sqmRobocopyGui - Changelog
 
+## [0.1.4.0] - 2026-11-03
+
+### Erweiterungen
+
+- Eigenes Symbol fuer den Startmenue-Eintrag (`Assets\sqmRobocopyGui.ico`: zwei Ordner mit
+  Pfeil im dunklen Design). Die Installation setzt es an die Verknuepfung; fehlt die Datei, bleibt
+  ein Standardsymbol.
+
 ## [0.1.3.0] - 2026-11-03
 
 ### Fehler
