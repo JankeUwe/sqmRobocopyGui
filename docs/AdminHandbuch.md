@@ -81,19 +81,21 @@ Wer eine Option einer Gruppe setzt, nimmt die anderen zurueck:
 
 ## 4. Vorlagen
 
-| Vorlage | Optionen |
-|---|---|
-| Ordner kopieren | `/E /DCOPY:DAT /MT /R:3 /W:5` |
-| Spiegeln /MIR | `/MIR /DCOPY:DAT /MT /XJ /R:3 /W:5` |
-| Nur Neues ergaenzen | `/E /XO /XC /XN /R:3 /W:5` (nur fehlende Dateien, nichts wird ueberschrieben) |
-| Verschieben | `/MOVE /E /R:3 /W:5` |
-| Server-Migration mit Rechten | `/MIR /COPYALL /DCOPY:DAT /ZB /MT:32 /XJ /R:1 /W:1 /NP` (Administrator) |
-| NAS / Linux-Freigabe | `/E /FFT /DST /Z /XJ /R:3 /W:10` |
-| Grosse Dateien | `/E /J /R:3 /W:10` |
-| SQL-Backups verteilen | Dateien `*.bak; *.trn`, `/S /J /XO /R:3 /W:10` |
-| Langsame WAN-Leitung | `/E /Z /COMPRESS /MT:4 /R:10 /W:30` |
-| Nur Ordnerstruktur | `/E /XF * /R:1 /W:1` |
-| Trockenlauf | `/E /L /R:1 /W:1` |
+| Vorlage | Optionen | Wirkung |
+|---|---|---|
+| Ordner kopieren | `/E /DCOPY:DAT /MT /R:3 /W:5` | Der Normalfall: kopiert alles inklusive leerer Unterordner, Ordnerzeitstempel bleiben erhalten, mehrere Threads, bei Fehlern 3 Versuche im Abstand von 5 Sekunden. Loescht im Ziel nichts. |
+| Spiegeln /MIR | `/MIR /DCOPY:DAT /MT /XJ /R:3 /W:5` | Macht das Ziel zum exakten Abbild der Quelle. **Loescht im Ziel alles, was in der Quelle fehlt.** Junction Points werden ausgelassen, damit keine Schleifen entstehen. |
+| Nur Neues ergaenzen | `/E /XO /XC /XN /R:3 /W:5` | Kopiert nur Dateien, die im Ziel noch nicht existieren. Aeltere, geaenderte und neuere Dateien im Ziel bleiben unangetastet. |
+| Verschieben | `/MOVE /E /R:3 /W:5` | Kopiert und loescht danach in der Quelle, Dateien und Ordner. |
+| Server-Migration mit Rechten | `/MIR /COPYALL /DCOPY:DAT /ZB /MT:32 /XJ /R:1 /W:1 /NP` | Fuer Umzuege (Administrator). Kopiert zusaetzlich NTFS-Rechte, Besitzer und Ueberwachung und liest ueber den Sicherungsmodus auch Dateien, auf die kein Zugriff besteht. 32 Threads, eine Wiederholung, keine Prozentanzeige im Protokoll. Spiegelt, **loescht also im Ziel**. |
+| NAS / Linux-Freigabe | `/E /FFT /DST /Z /XJ /R:3 /W:10` | Fuer Ziele mit ungenauen Zeitstempeln: `/FFT` toleriert 2 Sekunden, `/DST` gleicht die Sommerzeit-Verschiebung aus, `/Z` macht Kopien wiederaufnehmbar. |
+| Grosse Dateien | `/E /J /R:3 /W:10` | `/J` kopiert ohne Systempuffer. Das schont den Arbeitsspeicher und ist bei sehr grossen Dateien (VHDX, ISO, Backups) schneller. |
+| SQL-Backups verteilen | Dateien `*.bak; *.trn`, `/S /J /XO /R:3 /W:10` | Kopiert nur Backup-Dateien, durchsucht Unterordner ohne leere anzulegen, ueberspringt Dateien, die im Ziel neuer sind, ungepuffert fuer grosse Dateien. |
+| Langsame WAN-Leitung | `/E /Z /COMPRESS /MT:4 /R:10 /W:30` | Wiederaufnahmefaehig, komprimiert bei der Uebertragung (`/COMPRESS`, nur mit SMB-Kompression), wenige Threads, grosszuegige Wiederholung: 10 Versuche im Abstand von 30 Sekunden. |
+| Nur Ordnerstruktur | `/E /XF * /R:1 /W:1` | Legt den Ordnerbaum im Ziel an, kopiert aber keine Datei, weil alle per `/XF *` ausgeschlossen sind. |
+| Trockenlauf | `/E /L /R:1 /W:1` | `/L` zeigt nur an, was kopiert wuerde, und aendert nichts. Geeignet, um eine andere Einstellung vorher zu pruefen. |
+
+Die Vorlagen Spiegeln, Verschieben und Server-Migration koennen Daten loeschen; vor dem echten Lauf fragt die GUI wie ueblich nach.
 
 Eine Vorlage ersetzt alle Optionen, behaelt aber Quelle, Ziel, Protokolldatei und (sofern die
 Vorlage keine eigenen setzt) die Dateimuster.
