@@ -22,6 +22,7 @@ PowerShell 5.1 and PowerShell 7. The user interface is German.
 ```powershell
 .\Start-sqmRobocopyGui.cmd                                    # straight from the folder, no install
 Show-sqmRobocopyGui                                           # after Install.cmd
+# Install.cmd also adds a Start menu entry "sqmRobocopyGui" (all users when run as admin, else current user)
 Show-sqmRobocopyGui -Source D:\Data -Destination \\nas\backup\Data
 Show-sqmRobocopyGui -CommandLine 'robocopy D:\A E:\A /MIR /R:3 /W:5'   # edit an existing line
 ```

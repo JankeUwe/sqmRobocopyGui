@@ -1,6 +1,6 @@
 # sqmRobocopyGui - Handbuch
 
-Stand: 2026-10-14, sqmRobocopyGui 0.1.1.0, robocopy-Optionen von Windows 11 24H2 / Server 2025.
+Stand: 2026-11-03, sqmRobocopyGui 0.1.2.0, robocopy-Optionen von Windows 11 24H2 / Server 2025.
 
 ## 1. Zweck
 
@@ -21,7 +21,7 @@ aus und fuehrt robocopy auf Wunsch direkt aus, zuerst als Trockenlauf.
 |---|---|
 | Ohne Installation | `Start-sqmRobocopyGui.cmd` im Modulordner doppelklicken |
 | Installation | `Install.cmd` (AllUsers mit UAC) oder `Install.cmd CurrentUser` |
-| Nach Installation | `Show-sqmRobocopyGui`, optional `-Source`, `-Destination`, `-CommandLine` |
+| Nach Installation | Startmenue-Eintrag `sqmRobocopyGui` (legt `Install.cmd` an) oder `Show-sqmRobocopyGui`, optional `-Source`, `-Destination`, `-CommandLine` |
 
 Voraussetzungen: Windows PowerShell 5.1 oder PowerShell 7 unter Windows, .NET Framework 4.5.
 Keine weiteren Module; robocopy.exe ist Teil von Windows. Fuer `/B`, `/ZB`, `/COPYALL` und

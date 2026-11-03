@@ -1,5 +1,15 @@
 # sqmRobocopyGui - Changelog
 
+## [0.1.2.0] - 2026-11-03
+
+### Erweiterungen
+
+- `Install.cmd` / `Install.ps1` legen einen Startmenue-Eintrag "sqmRobocopyGui" an: bei
+  AllUsers fuer alle Benutzer (`%ProgramData%`), bei CurrentUser nur fuer den Anwender. Der
+  Eintrag startet die GUI direkt aus dem installierten Modul, ein Kommandozeilenaufruf ist
+  nicht mehr noetig. Die Verknuepfung des jeweils anderen Scopes wird entfernt, damit es
+  keinen Doppeleintrag gibt.
+
 ## [0.1.1.0] - 2026-10-14
 
 ### Fehler

@@ -189,11 +189,51 @@ try {
 }
 
 # ---------------------------------------------------------------------------
+# 6b. Startmenue-Verknuepfung
+#     AllUsers   -> %ProgramData%\Microsoft\Windows\Start Menu\Programs (alle Benutzer)
+#     CurrentUser-> %APPDATA%\Microsoft\Windows\Start Menu\Programs (nur dieser Benutzer)
+#     Die Verknuepfung startet powershell.exe direkt (kein Launcher im Zielordner noetig,
+#     der von /PURGE bereinigt wuerde) und importiert das Modul per Pfad zur installierten
+#     .psd1. Nur wenn der Import-Test erfolgreich war. Eine Verknuepfung des jeweils anderen
+#     Scopes wird entfernt, damit kein Doppeleintrag im Startmenue entsteht.
+# ---------------------------------------------------------------------------
+$shortcutName = 'sqmRobocopyGui.lnk'
+if ($importOk) {
+    Write-Host "Legt Startmenue-Eintrag an..." -ForegroundColor Cyan
+    try {
+        $menuAll  = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs'
+        $menuUser = Join-Path ([Environment]::GetFolderPath('Programs')) ''
+        $menuDir  = if ($Scope -eq 'AllUsers') { $menuAll } else { $menuUser }
+        $otherLnk = Join-Path $(if ($Scope -eq 'AllUsers') { $menuUser } else { $menuAll }) $shortcutName
+        if (Test-Path $otherLnk) {
+            Remove-Item $otherLnk -Force -ErrorAction SilentlyContinue
+        }
+
+        $psd1Installed = Join-Path $Destination 'sqmRobocopyGui.psd1'
+        $psExe         = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+        $shortcutPath  = Join-Path $menuDir $shortcutName
+        $wshShell      = New-Object -ComObject WScript.Shell
+        $shortcut      = $wshShell.CreateShortcut($shortcutPath)
+        $shortcut.TargetPath       = $psExe
+        $shortcut.Arguments        = "-NoProfile -STA -ExecutionPolicy Bypass -WindowStyle Hidden -Command `"Import-Module '$psd1Installed'; Show-sqmRobocopyGui`""
+        $shortcut.WorkingDirectory = [Environment]::GetFolderPath('UserProfile')
+        $shortcut.Description      = 'sqmRobocopyGui - robocopy-Befehle per GUI zusammenstellen'
+        $shortcut.IconLocation     = "$env:SystemRoot\System32\imageres.dll,109"
+        $shortcut.Save()
+        Write-Host "Startmenue-Eintrag angelegt: $shortcutPath" -ForegroundColor Green
+    } catch {
+        Write-Warning "Startmenue-Eintrag konnte nicht angelegt werden: $_"
+        Write-Warning "Die GUI laesst sich trotzdem starten: Show-sqmRobocopyGui"
+    }
+}
+
+# ---------------------------------------------------------------------------
 # 7. Naechste Schritte
 # ---------------------------------------------------------------------------
 if ($importOk) {
     Write-Host ""
     Write-Host "Naechste Schritte:" -ForegroundColor Cyan
+    Write-Host "  Startmenue > 'sqmRobocopyGui'                              # GUI per Klick" -ForegroundColor Gray
     Write-Host "  Show-sqmRobocopyGui                                        # GUI" -ForegroundColor Gray
     Write-Host "  Show-sqmRobocopyGui -Source D:\Daten -Destination E:\Kopie  # GUI, vorbelegt" -ForegroundColor Gray
     Write-Host "  Get-Help New-sqmRobocopyCommand -Examples                  # Generator per Skript" -ForegroundColor Gray
