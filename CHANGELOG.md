@@ -1,5 +1,15 @@
 # sqmRobocopyGui - Changelog
 
+## [0.1.5.0] - 2026-11-03
+
+### Aenderungen
+
+- Die Installation erfolgt immer fuer alle Benutzer (`%ProgramFiles%\WindowsPowerShell\Modules`,
+  Startmenue-Eintrag in `%ProgramData%`). `Install.cmd` fordert die Administratorrechte per UAC
+  an, `Install.ps1` bricht ohne Adminrechte mit Hinweis ab. Der Parameter `-Scope` und die
+  CurrentUser-Installation entfallen. Eine alte Installation und Verknuepfung des Benutzers
+  werden bei der Installation entfernt, damit sie die systemweite Version nicht verdecken.
+
 ## [0.1.4.0] - 2026-11-03
 
 ### Erweiterungen

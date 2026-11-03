@@ -1,41 +1,28 @@
 ﻿<#
 .SYNOPSIS
-    Installs the sqmRobocopyGui module into the PowerShell module path.
+    Installs the sqmRobocopyGui module system-wide (all users).
 
 .DESCRIPTION
-    Copies the module to either the system-wide module path (requires Admin)
-    or the current user's personal module path (no Admin rights needed).
-
-    The default scope is determined automatically:
-      - Running as Administrator  -> AllUsers  ($env:ProgramFiles\WindowsPowerShell\Modules)
-      - Running as normal user    -> CurrentUser ($HOME\Documents\WindowsPowerShell\Modules)
-    Pass -Scope explicitly to override this behaviour.
+    Always installs to the system-wide module path
+    ($env:ProgramFiles\WindowsPowerShell\Modules) and creates the Start menu entry for all
+    users. Requires Administrator rights; Install.cmd elevates automatically via UAC.
+    An older per-user copy (CurrentUser) is removed to avoid version conflicts.
 
     No external dependencies (only robocopy.exe, which ships with Windows).
-
-.PARAMETER Scope
-    Installation scope:
-      CurrentUser  — installs to $HOME\Documents\WindowsPowerShell\Modules
-      AllUsers     — installs to $env:ProgramFiles\WindowsPowerShell\Modules (requires Admin)
-    Default: AllUsers when running as Administrator, CurrentUser otherwise.
 
 .PARAMETER Source
     Source directory of the module. Defaults to the script's own directory.
 
 .PARAMETER Destination
-    Explicit destination path. Overrides -Scope when specified.
-
-.EXAMPLE
-    .\Install.ps1
-    Installs for the current user — no Admin rights required.
+    Explicit destination path. Overrides the default module path when specified.
 
 .EXAMPLE
     .\Install.cmd
-    Recommended when running from a cross-domain share (handles execution policy).
+    Recommended: handles execution policy (cross-domain shares) and elevates via UAC.
 
 .EXAMPLE
-    .\Install.ps1 -Scope AllUsers
-    Installs system-wide — requires Admin rights.
+    .\Install.ps1
+    From an elevated PowerShell.
 
 .NOTES
     Uses robocopy /COPY:DAT to copy the module data. Note: /COPY:DAT does NOT strip
@@ -43,101 +30,38 @@
     destination files is what removes it.
 #>
 param(
-    [ValidateSet('CurrentUser', 'AllUsers')]
-    [string]$Scope       = '',          # auto-detected below
     [string]$Source      = $PSScriptRoot,
     [string]$Destination = ''
 )
 
 # ---------------------------------------------------------------------------
-# 0. Scope auto-detect: Admin -> AllUsers, sonst CurrentUser
+# 0. Immer AllUsers - Adminrechte erforderlich
 # ---------------------------------------------------------------------------
+$Scope   = 'AllUsers'
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
              [Security.Principal.WindowsBuiltInRole]'Administrator')
-
-if ($Scope -eq '') {
-    $Scope = if ($isAdmin) { 'AllUsers' } else { 'CurrentUser' }
-    Write-Host "Auto-detected Scope: $Scope" -ForegroundColor Cyan
+if (-not $isAdmin) {
+    Write-Warning "sqmRobocopyGui is always installed for all users and requires Administrator rights."
+    Write-Warning "Run Install.cmd (it asks for elevation via UAC) or start Install.ps1 from an elevated PowerShell."
+    exit 1
 }
 
 # ---------------------------------------------------------------------------
 # 1. Zielpfad bestimmen
 # ---------------------------------------------------------------------------
 if (-not $Destination) {
-    if ($Scope -eq 'AllUsers') {
-        $Destination = "$env:ProgramFiles\WindowsPowerShell\Modules\sqmRobocopyGui"
-    } else {
-        $docsPath    = [Environment]::GetFolderPath('MyDocuments')
-        $Destination = Join-Path $docsPath "WindowsPowerShell\Modules\sqmRobocopyGui"
-    }
+    $Destination = "$env:ProgramFiles\WindowsPowerShell\Modules\sqmRobocopyGui"
 }
 
 # ---------------------------------------------------------------------------
-# 2. Doppel-Installation erkennen und warnen
+# 2. Alte CurrentUser-Installation entfernen (wuerde sonst die AllUsers-Version verdecken)
 # ---------------------------------------------------------------------------
-$docsPath_     = [Environment]::GetFolderPath('MyDocuments')
-$pathUser      = Join-Path $docsPath_ "WindowsPowerShell\Modules\sqmRobocopyGui"
-$pathAllUsers  = "$env:ProgramFiles\WindowsPowerShell\Modules\sqmRobocopyGui"
-$existsUser    = Test-Path $pathUser
-$existsAll     = Test-Path $pathAllUsers
-
-if ($existsUser -and $existsAll -and $Scope -eq 'AllUsers') {
-    # Running as Admin installing AllUsers — remove the CurrentUser copy automatically
-    Write-Host "Both installations detected. Removing CurrentUser copy..." -ForegroundColor Yellow
-    Write-Host "  $pathUser" -ForegroundColor Gray
-    Remove-Item $pathUser -Recurse -Force
-    Write-Host "CurrentUser installation removed." -ForegroundColor Green
-    Write-Host ""
-    $existsUser = $false
-
-} elseif ($existsUser -and $existsAll) {
-    # CurrentUser install, both exist — warn, cannot auto-remove AllUsers without Admin
-    Write-Warning "sqmRobocopyGui is installed in BOTH locations:"
-    Write-Warning "  CurrentUser : $pathUser"
-    Write-Warning "  AllUsers    : $pathAllUsers"
-    Write-Warning "PowerShell loads the CurrentUser version — the AllUsers copy is ignored."
-    Write-Warning "To remove the AllUsers copy (requires Admin):"
-    Write-Warning "  Remove-Item '$pathAllUsers' -Recurse -Force"
-    Write-Host ""
-
-} elseif ($Scope -eq 'CurrentUser' -and $existsAll) {
-    Write-Warning "An AllUsers installation already exists at: $pathAllUsers"
-    Write-Warning "After this install, PowerShell will load the CurrentUser version and ignore AllUsers."
-    Write-Host ""
-
-} elseif ($Scope -eq 'AllUsers' -and $existsUser) {
-    # Running as Admin — remove the CurrentUser copy automatically
+$pathUser = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'WindowsPowerShell\Modules\sqmRobocopyGui'
+if (Test-Path $pathUser) {
     Write-Host "CurrentUser installation detected. Removing to avoid conflicts..." -ForegroundColor Yellow
     Write-Host "  $pathUser" -ForegroundColor Gray
     Remove-Item $pathUser -Recurse -Force
     Write-Host "CurrentUser installation removed." -ForegroundColor Green
-    Write-Host ""
-    $existsUser = $false
-}
-
-# ---------------------------------------------------------------------------
-# 3. Scope-Hinweis und Admin-Check
-# ---------------------------------------------------------------------------
-if ($Scope -eq 'AllUsers') {
-    if (-not $isAdmin) {
-        Write-Warning "Scope 'AllUsers' requires Administrator rights."
-        Write-Warning "Run Install.cmd as Administrator, or use:  .\Install.ps1  (installs for current user only)"
-        exit 1
-    }
-} else {
-    # CurrentUser — Hinweis auf systemweite Installation
-    Write-Host ""
-    if ($isAdmin) {
-        Write-Host "INFO: You are running as Administrator." -ForegroundColor Cyan
-        Write-Host "      Installing for the current user only ($env:USERNAME)." -ForegroundColor Cyan
-        Write-Host "      To install system-wide for ALL users, run:" -ForegroundColor Cyan
-        Write-Host "        Install.cmd AllUsers" -ForegroundColor White
-    } else {
-        Write-Host "INFO: Installing for the current user only ($env:USERNAME)." -ForegroundColor Cyan
-        Write-Host "      To install system-wide for ALL users, re-run as Administrator:" -ForegroundColor Cyan
-        Write-Host "        Right-click Install.cmd > 'Run as administrator'" -ForegroundColor White
-        Write-Host "        or: Install.cmd AllUsers  (in an elevated PowerShell)" -ForegroundColor White
-    }
     Write-Host ""
 }
 
@@ -189,22 +113,19 @@ try {
 }
 
 # ---------------------------------------------------------------------------
-# 6b. Startmenue-Verknuepfung
-#     AllUsers   -> %ProgramData%\Microsoft\Windows\Start Menu\Programs (alle Benutzer)
-#     CurrentUser-> %APPDATA%\Microsoft\Windows\Start Menu\Programs (nur dieser Benutzer)
-#     Die Verknuepfung startet powershell.exe direkt (kein Launcher im Zielordner noetig,
-#     der von /PURGE bereinigt wuerde) und importiert das Modul per Pfad zur installierten
-#     .psd1. Nur wenn der Import-Test erfolgreich war. Eine Verknuepfung des jeweils anderen
-#     Scopes wird entfernt, damit kein Doppeleintrag im Startmenue entsteht.
+# 6b. Startmenue-Verknuepfung (alle Benutzer)
+#     %ProgramData%\Microsoft\Windows\Start Menu\Programs. Die Verknuepfung startet
+#     powershell.exe direkt (kein Launcher im Zielordner noetig, der von /PURGE bereinigt
+#     wuerde) und importiert das Modul per Pfad zur installierten .psd1. Nur wenn der
+#     Import-Test erfolgreich war. Eine alte Verknuepfung des Benutzers wird entfernt, damit
+#     kein Doppeleintrag im Startmenue entsteht.
 # ---------------------------------------------------------------------------
 $shortcutName = 'sqmRobocopyGui.lnk'
 if ($importOk) {
     Write-Host "Legt Startmenue-Eintrag an..." -ForegroundColor Cyan
     try {
-        $menuAll  = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs'
-        $menuUser = Join-Path ([Environment]::GetFolderPath('Programs')) ''
-        $menuDir  = if ($Scope -eq 'AllUsers') { $menuAll } else { $menuUser }
-        $otherLnk = Join-Path $(if ($Scope -eq 'AllUsers') { $menuUser } else { $menuAll }) $shortcutName
+        $menuDir  = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs'
+        $otherLnk = Join-Path ([Environment]::GetFolderPath('Programs')) $shortcutName
         if (Test-Path $otherLnk) {
             Remove-Item $otherLnk -Force -ErrorAction SilentlyContinue
         }
