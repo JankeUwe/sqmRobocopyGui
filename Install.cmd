@@ -67,7 +67,20 @@ type "%SCRIPT_DIR%Install.ps1" > "!BOOT_DIR!\Install.ps1"
 set "SRC_DIR=%SCRIPT_DIR%"
 if "!SRC_DIR:~-1!"=="\" set "SRC_DIR=!SRC_DIR:~0,-1!"
 
-call :RUN_INSTALL
+call :RUN_INSTALL "!BOOT_DIR!\Install.ps1" -Source "!SRC_DIR!"
+
+rmdir /s /q "!BOOT_DIR!" >nul 2>&1
+
+endlocal
+pause
+goto :EOF
+
+:: ===============================================================
+:: Subroutine: Install.ps1 mit den passenden Argumenten starten.
+::   %~1 = Pfad zu Install.ps1
+::   %~2 %~3 = Zusatzargumente (-Source "<pfad>")
+:: ===============================================================
+:RUN_INSTALL
 set "PS1=%~1"
 :: %2 %3 OHNE Tilde, damit die Quotes um den -Source-Pfad erhalten bleiben
 set "EXTRA=%2 %3"

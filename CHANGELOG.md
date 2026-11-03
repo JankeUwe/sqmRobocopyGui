@@ -1,5 +1,13 @@
 # sqmRobocopyGui - Changelog
 
+## [0.1.5.1] - 2026-11-03
+
+### Fehler
+
+- `Install.cmd` brach mit "Label nicht gefunden" ab. Beim Umbau auf die reine AllUsers-Installation
+  ging die Zeile verloren, die die Installation startet und danach aufraeumt, und die Subroutine
+  wurde an der falschen Stelle gekuerzt. Der Ablauf ist wiederhergestellt.
+
 ## [0.1.5.0] - 2026-11-03
 
 ### Aenderungen
