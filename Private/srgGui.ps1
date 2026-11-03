@@ -985,13 +985,16 @@ function Get-srgPickStart([string]$Path) {
 function Select-srgFolder([string]$Title, [string]$Start, [switch]$Multi) {
 	$ui = $script:srgUi
 	try {
-		return [Srg.FolderPicker]::Pick($ui.Form.Handle, $Title, $Start, [bool]$Multi)
+		# Komma: sonst entpackt PowerShell ein einelementiges Array zum String, und $r[0] waere nur der erste Buchstabe
+		$picked = [Srg.FolderPicker]::Pick($ui.Form.Handle, $Title, $Start, [bool]$Multi)
+		if ($null -eq $picked) { return $null }
+		return ,$picked
 	} catch {
 		# Rueckfall: klassischer Dialog
 		$fbd = New-Object System.Windows.Forms.FolderBrowserDialog
 		$fbd.Description = $Title
 		if ($Start) { $fbd.SelectedPath = $Start }
-		try { if ($fbd.ShowDialog($ui.Form) -eq 'OK') { return @($fbd.SelectedPath) } } finally { $fbd.Dispose() }
+		try { if ($fbd.ShowDialog($ui.Form) -eq 'OK') { return ,@($fbd.SelectedPath) } } finally { $fbd.Dispose() }
 		return $null
 	}
 }
@@ -1000,7 +1003,8 @@ function Show-srgDirPicker([string]$Key) {
 	$ui = $script:srgUi
 	$title = if ($Key -eq 'Source') { 'Quellordner auswaehlen' } else { 'Zielordner auswaehlen' }
 	$start = Get-srgPickStart $ui[$Key].Text
-	if (-not $start -and $Key -eq 'Destination') { $start = Get-srgPickStart $ui.Source.Text }
+	# Ziel nicht am Quellordner starten lassen: ohne eigenen Pfad "Dieser PC"
+	if (-not $start -and $Key -eq 'Destination') { $start = '::{20D04FE0-3AEA-1069-A2D8-08002B30309D}' }
 	$r = Select-srgFolder -Title $title -Start $start
 	if ($r) { $ui[$Key].Text = $r[0]; Update-srgPathState $Key }
 }

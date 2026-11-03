@@ -8,7 +8,7 @@
 
 @{
 	RootModule			   = 'sqmRobocopyGui.psm1'
-	ModuleVersion		   = '0.1.2.0'
+	ModuleVersion		   = '0.1.3.0'
 	GUID				   = '40d407ca-5aef-4bb7-92c5-8ed874f3b7a1'
 	Author				   = 'Uwe Janke'
 	CompanyName		       = 'dtcSoftware'

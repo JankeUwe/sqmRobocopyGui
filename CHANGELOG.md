@@ -1,5 +1,18 @@
 # sqmRobocopyGui - Changelog
 
+## [0.1.3.0] - 2026-11-03
+
+### Fehler
+
+- Die Ordnerauswahl kuerzte den gewaehlten Pfad auf den ersten Buchstaben (`F:\Daten\Backup`
+  wurde zu `F`). Ursache: PowerShell entpackte das einelementige Ergebnis-Array zu einem String,
+  `$r[0]` lieferte dann nur das erste Zeichen. Das Ergebnis wird jetzt als Array zurueckgegeben.
+
+### Erweiterungen
+
+- Die Zielauswahl startet nicht mehr im Quellordner. Ist im Zielfeld ein (teilweise
+  vorhandener) Pfad eingetragen, startet sie dort, sonst bei "Dieser PC".
+
 ## [0.1.2.0] - 2026-11-03
 
 ### Erweiterungen
